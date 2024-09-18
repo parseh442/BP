@@ -15,14 +15,18 @@ const defaultHttpPorts = ['80', '8080', '2052', '2082', '2086', '2095', '8880'];
 const defaultHttpsPorts = ['443', '8443', '2053', '2083', '2087', '2096'];
 let proxyIP = proxyIPs[Math.floor(Math.random() * proxyIPs.length)];
 let dohURL = 'https://cloudflare-dns.com/dns-query';
-let trojanPassword = 'bpb-trojan';
+let trojanPassword = `bpb-trojan`;
 // https://emn178.github.io/online-tools/sha224.html
 // https://www.atatus.com/tools/sha224-to-hash
-let hashPassword = 'b5d0a5f7ff7aac227bc68b55ae713131ffdf605ca0da52cce182d513'
-let panelVersion = '2.5.4';
+let hashPassword = 'b5d0a5f7ff7aac227bc68b55ae713131ffdf605ca0da52cce182d513';
+let panelVersion = '2.5.5';
 
 if (!isValidUUID(userID)) {
-    throw new Error('uuid is not valid');
+    throw new Error('UUID is not valid');
+}
+
+if (!isValidSHA224(hashPassword)) {
+    throw new Error('Hash Password is not valid');
 }
 
 export default {
@@ -635,7 +639,7 @@ async function handleTCPOutBound(
             
         vlessResponseHeader 
             ? vlessRemoteSocketToWS(tcpSocket, webSocket, vlessResponseHeader, null, log) 
-            : trojanRemoteSocketToWS(tcpSocket2, webSocket, null, log);
+            : trojanRemoteSocketToWS(tcpSocket, webSocket, null, log);
     }
   
     const tcpSocket = await connectAndWrite(addressRemote, portRemote);
@@ -966,6 +970,11 @@ function isValidUUID(uuid) {
 	return uuidRegex.test(uuid);
 }
 
+function isValidSHA224(hash) {
+    const sha224Regex = /^[0-9a-f]{56}$/i;
+    return sha224Regex.test(hash);
+}
+
 const WS_READY_STATE_OPEN = 1;
 const WS_READY_STATE_CLOSING = 2;
 /**
@@ -1107,18 +1116,18 @@ function generateRemark(index, port, protocol, fragType) {
     switch (index) {
         case 0:
         case 1:
-            remark = `💥 ${protocol}${type} - Domain ${index + 1} : ${port}`;
+            remark = `💥 😎 ${protocol}${type} - Domain ${index + 1} : ${port}`;
             break;
         case 2:
         case 3:
-            remark = `💥 ${protocol}${type} - IPv4 ${index - 1} : ${port}`;
+            remark = `💥 😎 ${protocol}${type} - IPv4 ${index - 1} : ${port}`;
             break;
         case 4:
         case 5:
-            remark = `💥 ${protocol}${type} - IPv6 ${index - 3} : ${port}`;
+            remark = `💥 😎 ${protocol}${type} - IPv6 ${index - 3} : ${port}`;
             break;
         default:
-            remark = `💥 ${protocol}${type} - Clean IP ${index - 5} : ${port}`;
+            remark = `💥 😎 ${protocol}${type} - Clean IP ${index - 5} : ${port}`;
             break;
     }
 
@@ -1364,11 +1373,11 @@ async function renderHomePage (env, hostName, fragConfigs) {
             <tr>
                 <td>
                     ${config.address === 'Best-Ping' 
-                        ? `<div  style="justify-content: center;"><span><b>💥 🇸🇬 TUNEL F - Best-Ping 💥</b></span></div>` 
+                        ? `<div  style="justify-content: center;"><span><b>💥 😎 TUNEL F - Best-Ping 💥</b></span></div>` 
                         : config.address === 'WorkerLess'
-                            ? `<div  style="justify-content: center;"><span><b>💥 🇸🇬 TUNEL F - WorkerLess ⭐</b></span></div>`
+                            ? `<div  style="justify-content: center;"><span><b>💥 😎 TUNEL F - WorkerLess ⭐</b></span></div>`
                             : config.address === 'Best-Fragment'
-                                ? `<div  style="justify-content: center;"><span><b>💥 🇸🇬 TUNEL F - Best-Fragment 😎</b></span></div>`
+                                ? `<div  style="justify-content: center;"><span><b>💥 😎 TUNEL F - Best-Fragment 😎</b></span></div>`
                                 : config.address
                     }
                 </td>
@@ -1407,7 +1416,7 @@ async function renderHomePage (env, hostName, fragConfigs) {
 	<head>
 		<meta charset="UTF-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Control Panel ${panelVersion}</title>
+        <title>Control panel ${panelVersion}</title>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
 		<style>
@@ -1624,10 +1633,10 @@ async function renderHomePage (env, hostName, fragConfigs) {
 	</head>
 	
 	<body>
-		<h1>Control Panel <span style="font-size: smaller;">${panelVersion}</span> ⚠️</h1>
+		<h1>Control panel <span style="font-size: smaller;">${panelVersion}</span> 💥 😎</h1>
 		<div class="form-container">
-            <h2>FRAGMENT SETTINGS ⚙️</h2>
-			<form id="configForm">
+            <form id="configForm">
+                <h2>VLESS/TROJAN SETTINGS ⚙️</h2>
 				<div class="form-control">
 					<label for="remoteDNS">🌏 Remote DNS</label>
 					<input type="url" id="remoteDNS" name="remoteDNS" value="${remoteDNS}" required>
@@ -1637,7 +1646,54 @@ async function renderHomePage (env, hostName, fragConfigs) {
 					<input type="text" id="localDNS" name="localDNS" value="${localDNS}"
 						pattern="^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)|localhost$"
 						title="Please enter a valid DNS IP Address or localhost!"  required>
-				</div>	
+				</div>
+				<div class="form-control">
+					<label for="proxyIP">📍 Proxy IP</label>
+					<input type="text" id="proxyIP" name="proxyIP" value="${proxyIP}">
+				</div>
+				<div class="form-control">
+					<label for="cleanIPs">✨ Clean IPs</label>
+					<input type="text" id="cleanIPs" name="cleanIPs" value="${cleanIPs.replaceAll(",", " , ")}">
+				</div>
+                <div class="form-control">
+                    <label>🔎 Online Scanner</label>
+                    <a href="https://scanner.github1.cloud/" id="scanner" name="scanner" target="_blank">
+                        <button type="button" class="button">
+                            Scan now
+                            <span class="material-symbols-outlined" style="margin-left: 5px;">open_in_new</span>
+                        </button>
+                    </a>
+                </div>
+                <div class="form-control" style="padding-top: 10px;">
+					<label>⚙️ Protocols</label>
+					<div style="display: grid; grid-template-columns: 1fr 1fr; align-items: baseline; margin-top: 10px;">
+                        <div style = "display: flex; justify-content: center; align-items: center;">
+                            <input type="checkbox" id="vlessConfigs" name="vlessConfigs" onchange="handleProtocolChange(event)" style="margin: 0; grid-column: 2;" value="true" ${vlessConfigs ? 'checked' : ''}>
+                            <label for="vlessConfigs" style="margin: 0 5px; font-weight: normal; font-size: unset;">VLESS</label>
+                        </div>
+                        <div style = "display: flex; justify-content: center; align-items: center;">
+                            <input type="checkbox" id="trojanConfigs" name="trojanConfigs" onchange="handleProtocolChange(event)" style="margin: 0; grid-column: 2;" value="true" ${trojanConfigs ? 'checked' : ''}>
+                            <label for="trojanConfigs" style="margin: 0 5px; font-weight: normal; font-size: unset;">Trojan</label>
+                        </div>
+					</div>
+				</div>
+                <div class="table-container">
+                    <table id="frag-sub-table">
+                        <tr>
+                            <th style="text-wrap: nowrap; background-color: gray;">Config type</th>
+                            <th style="text-wrap: nowrap; background-color: gray;">Ports</th>
+                        </tr>
+                        <tr>
+                            <td style="text-align: center; font-size: larger;"><b>TLS</b></td>
+                            <td style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr;">${(await buildPortsBlock()).httpsPortsBlock}</td>    
+                        </tr>
+                        ${hostName.includes('pages.dev') ? '' : `<tr>
+                            <td style="text-align: center; font-size: larger;"><b>Non TLS</b></td>
+                            <td style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr;">${(await buildPortsBlock()).httpPortsBlock}</td>    
+                        </tr>`}        
+                    </table>
+                </div>
+                <h2>FRAGMENT SETTINGS ⚙️</h2>	
 				<div class="form-control">
 					<label for="fragmentLengthMin">📐 Length</label>
 					<div style="display: grid; grid-template-columns: 1fr auto 1fr; align-items: baseline;">
@@ -1697,53 +1753,6 @@ async function renderHomePage (env, hostName, fragConfigs) {
                     <div class="routing">
 						<input type="checkbox" id="block-udp-443" name="block-udp-443" style="margin: 0; grid-column: 2;" value="true" ${blockUDP443 ? 'checked' : ''}>
                         <label for="block-udp-443">Block QUIC</label>
-					</div>
-				</div>
-                <h2>PROXY IP ⚙️</h2>
-				<div class="form-control">
-					<label for="proxyIP">📍 IP or Domain</label>
-					<input type="text" id="proxyIP" name="proxyIP" value="${proxyIP}">
-				</div>
-                <h2>CLEAN IP ⚙️</h2>
-				<div class="form-control">
-					<label for="cleanIPs">✨ Clean IPs</label>
-					<input type="text" id="cleanIPs" name="cleanIPs" value="${cleanIPs.replaceAll(",", " , ")}">
-				</div>
-                <div class="form-control">
-                    <label>🔎 Online Scanner</label>
-                    <a href="https://scanner.github1.cloud/" id="scanner" name="scanner" target="_blank">
-                        <button type="button" class="button">
-                            Scan now
-                            <span class="material-symbols-outlined" style="margin-left: 5px;">open_in_new</span>
-                        </button>
-                    </a>
-                </div>
-                <h2>PORTS ⚙️</h2>
-                <div class="table-container">
-                    <table id="frag-sub-table">
-                        <tr>
-                            <th style="text-wrap: nowrap; background-color: gray;">Config type</th>
-                            <th style="text-wrap: nowrap; background-color: gray;">Ports</th>
-                        </tr>
-                        <tr>
-                            <td style="text-align: center; font-size: larger;"><b>TLS</b></td>
-                            <td style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr;">${(await buildPortsBlock()).httpsPortsBlock}</td>    
-                        </tr>
-                        ${hostName.includes('pages.dev') ? '' : `<tr>
-                            <td style="text-align: center; font-size: larger;"><b>Non TLS</b></td>
-                            <td style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr;">${(await buildPortsBlock()).httpPortsBlock}</td>    
-                        </tr>`}        
-                    </table>
-                </div>
-                <h2>CONFIG TYPES ⚙️</h2>
-				<div class="form-control" style="margin-bottom: 20px;">			
-                    <div class="routing">
-                        <input type="checkbox" id="vlessConfigs" name="vlessConfigs" onchange="handleProtocolChange(event)" style="margin: 0; grid-column: 2;" value="true" ${vlessConfigs ? 'checked' : ''}>
-                        <label for="vlessConfigs">VLESS</label>
-                    </div>
-                    <div class="routing">
-						<input type="checkbox" id="trojanConfigs" name="trojanConfigs" onchange="handleProtocolChange(event)" style="margin: 0; grid-column: 2;" value="true" ${trojanConfigs ? 'checked' : ''}>
-                        <label for="trojanConfigs">Trojan</label>
 					</div>
 				</div>
                 <h2>WARP SETTINGS ⚙️</h2>
@@ -1825,7 +1834,7 @@ async function renderHomePage (env, hostName, fragConfigs) {
 				</div>
 			</form>
             <hr>            
-			<h2>NORMAL CONFIGS SUB 🔗</h2>
+			<h2>NORMAL SUB 🔗</h2>
 			<div class="table-container">
 				<table id="normal-configs-table">
 					<tr>
@@ -1982,10 +1991,10 @@ async function renderHomePage (env, hostName, fragConfigs) {
                             </div>
                         </td>
                         <td>
-                            <button onclick="openQR('https://${hostName}/fragsub/${userID}#BPB Fragment', 'Fragment Subscription')" style="margin-bottom: 8px;">
+                            <button onclick="openQR('https://${hostName}/fragsub/${userID}#TUNEL Fragment', 'Fragment Subscription')" style="margin-bottom: 8px;">
                                 QR Code&nbsp;<span class="material-symbols-outlined">qr_code</span>
                             </button>
-                            <button onclick="copyToClipboard('https://${hostName}/fragsub/${userID}#BPB Fragment', true)">
+                            <button onclick="copyToClipboard('https://${hostName}/fragsub/${userID}#TUNEL Fragment', true)">
                                 Copy Sub<span class="material-symbols-outlined">format_list_bulleted</span>
                             </button>
                         </td>
@@ -2617,7 +2626,7 @@ async function renderLoginPage () {
     </head>
     <body>
         <div class="container">
-            <h1>Control Panel <span style="font-size: smaller;">${panelVersion}</span> ⚠️</h1>
+            <h1>Control panel <span style="font-size: smaller;">${panelVersion}</span> 💥 😎</h1>
             <div class="form-container">
                 <h2>User Login</h2>
                 <form id="loginForm">
@@ -2688,7 +2697,7 @@ function renderErrorPage (message, error, refer) {
 
     <body>
         <div id="error-container">
-            <h1>Control Panel <span style="font-size: smaller;">${panelVersion}</span> ⚠️</h1>
+            <h1>Control panel <span style="font-size: smaller;">${panelVersion}</span> 💥 😎</h1>
             <div id="error-message">
                 <h2>${message} ${refer 
                     ? 'Please try again or refer to <a href="https://github.com/bia-pain-bache/BPB-Worker-Panel/blob/main/README.md">documents</a>' 
@@ -2808,7 +2817,7 @@ async function buildWarpOutbounds (env, client, proxySettings, warpConfigs) {
 
         if (client === 'singbox' || client === 'hiddify') {
             let singboxOutbound = buildSingboxWarpOutbound(
-                client === 'hiddify' ? `💥 Warp Pro ${index + 1} 🇮🇷` : `💥 Warp ${index + 1} 🇮🇷`, 
+                client === 'hiddify' ? `💥 😎 Warp Pro ${index + 1} 🇮🇷` : `💥 😎 Warp ${index + 1} 🇮🇷`, 
                 warpIPv6, 
                 privateKey, 
                 publicKey, 
@@ -2828,7 +2837,7 @@ async function buildWarpOutbounds (env, client, proxySettings, warpConfigs) {
         }
 
         if (client === 'clash') {
-            let clashOutbound = buildClashWarpOutbound(`💥 Warp ${index + 1} 🇮🇷`, warpIPv6, privateKey, publicKey, endpoint, reserved, '');
+            let clashOutbound = buildClashWarpOutbound(`💥 😎 Warp ${index + 1} 🇮🇷`, warpIPv6, privateKey, publicKey, endpoint, reserved, '');
             warpOutbounds.push(clashOutbound);
         }
 
@@ -2887,8 +2896,8 @@ async function buildWoWOutbounds (env, client, proxySettings, warpConfigs) {
                     i === 1
                     ? `warp-ir_${index + 1}` 
                     : client === 'hiddify' 
-                        ? `💥 WoW Pro ${index + 1} 🌍` 
-                        : `💥 WoW ${index + 1} 🌍` , 
+                        ? `💥 😎 WoW Pro ${index + 1} 🌍` 
+                        : `💥 😎 WoW ${index + 1} 🌍` , 
                     warpIPv6, 
                     privateKey, 
                     publicKey, 
@@ -2909,7 +2918,7 @@ async function buildWoWOutbounds (env, client, proxySettings, warpConfigs) {
 
             if (client === 'clash') {
                 let clashOutbound = buildClashWarpOutbound(
-                    i === 1 ? `warp-ir_${index + 1}` : `💥 WoW ${index + 1} 🌍`, 
+                    i === 1 ? `warp-ir_${index + 1}` : `💥 😎 WoW ${index + 1} 🌍`, 
                     warpIPv6, 
                     privateKey, 
                     publicKey, 
@@ -2939,12 +2948,7 @@ async function buildXrayDNSObject (remoteDNS, localDNS, blockAds, bypassIran, by
             "domain:googleapis.cn": ["googleapis.com"]
         },
         servers: [
-            remoteDNS,
-            {
-                address: localDNS,
-                domains: [],
-                port: 53,
-            },
+            remoteDNS
         ],
         tag: "dns",
     };
@@ -2981,11 +2985,15 @@ async function buildXrayDNSObject (remoteDNS, localDNS, blockAds, bypassIran, by
         dnsObject.hosts["geosite:category-porn"] = ["127.0.0.1"];
     }
 
-    if (!(bypassIran || bypassChina) || localDNS === 'localhost' || isWorkerLess) {
-        dnsObject.servers.pop();
-    } else {
-        bypassIran && dnsObject.servers[2].domains.push("geosite:category-ir"); 
-        bypassChina && dnsObject.servers[2].domains.push("geosite:cn");         
+    if (!isWorkerLess && localDNS !== 'localhost' && (bypassIran || bypassChina)) {
+        let localDNSServer = {
+            address: localDNS,
+            domains: [],
+            port: 53,
+        };
+        bypassIran && localDNSServer.domains.push("geosite:category-ir"); 
+        bypassChina && localDNSServer.domains.push("geosite:cn");
+        dnsObject.servers.push(localDNSServer);
     }
 
     return dnsObject;
@@ -3327,7 +3335,7 @@ async function buildWorkerLessConfig(env, client) {
     fakeOutbound.streamSettings.wsSettings.path = '/';
 
     let fragConfig = structuredClone(xrayConfigTemp);
-    fragConfig.remarks  = '💥 🇸🇬 TUNEL Frag - WorkerLess ⭐'
+    fragConfig.remarks  = '💥 😎 TUNEL F - WorkerLess ⭐'
     fragConfig.dns = await buildXrayDNSObject('https://cloudflare-dns.com/dns-query', localDNS, blockAds, bypassIran, bypassChina, blockPorn, true);
     fragConfig.outbounds[0].settings.domainStrategy = 'UseIP';
     fragConfig.outbounds[0].settings.fragment.length = `${lengthMin}-${lengthMax}`;
@@ -3530,7 +3538,7 @@ async function getFragmentConfigs(env, hostName, client) {
     }
 
     let bestPing = structuredClone(xrayConfigTemp);
-    bestPing.remarks = '💥 🇸🇬 TUNEL Frag - Best Ping 💥';
+    bestPing.remarks = '💥 😎 TUNEL F - Best Ping 💥';
     bestPing.dns = await buildXrayDNSObject(remoteDNS, localDNS, blockAds, bypassIran, bypassChina, blockPorn, false);
     bestPing.outbounds[0].settings.fragment.length = `${lengthMin}-${lengthMax}`;
     bestPing.outbounds[0].settings.fragment.interval = `${intervalMin}-${intervalMax}`;
@@ -3552,7 +3560,7 @@ async function getFragmentConfigs(env, hostName, client) {
     }
 
     let bestFragment = structuredClone(xrayConfigTemp);
-    bestFragment.remarks = '💥 🇸🇬 TUNEL Frag - Best Fragment 😎';
+    bestFragment.remarks = '💥 😎 TUNEL F - Best Fragment 😎';
     bestFragment.dns = await buildXrayDNSObject(remoteDNS, localDNS, blockAds, bypassIran, bypassChina, blockPorn, false);
     bestFragment.outbounds.splice(0,1);
     bestFragValues.forEach( (fragLength, index) => {
@@ -3634,7 +3642,7 @@ async function getXrayWarpConfigs (env, client) {
     xrayWarpConfig.routing.rules[xrayWarpConfig.routing.rules.length - 1].outboundTag = 'warp';
     delete xrayWarpConfig.observatory;
     delete xrayWarpConfig.routing.balancers;
-    xrayWarpBestPing.remarks = client === 'nikang' ? '💥 🇸🇬 TUNEL - Warp Pro Best Ping 🚀' : '💥 🇸🇬 TUNEL - Warp Best Ping 🚀';
+    xrayWarpBestPing.remarks = client === 'nikang' ? '💥 😎 TUNEL - Warp Pro Best Ping 🚀' : '💥 😎 TUNEL - Warp Best Ping 🚀';
     xrayWarpBestPing.dns = await buildXrayDNSObject('1.1.1.1', localDNS, blockAds, bypassIran, bypassChina, blockPorn, false);
     xrayWarpBestPing.routing.rules = buildXrayRoutingRules(localDNS, blockAds, bypassIran, blockPorn, bypassLAN, bypassChina, blockUDP443, false, true);
     xrayWarpBestPing.outbounds.splice(0,1);
@@ -3649,7 +3657,7 @@ async function getXrayWarpConfigs (env, client) {
     xrayWarpOutbounds.forEach((outbound, index) => {
         xrayWarpConfigs.push({
             ...xrayWarpConfig,
-            remarks: client === 'nikang' ? `💥 🇸🇬 TUNEL - Warp Pro ${index + 1} 🇮🇷` : `💥 🇸🇬 TUNEL - Warp ${index + 1} 🇮🇷`,
+            remarks: client === 'nikang' ? `💥 😎 TUNEL - Warp Pro ${index + 1} 🇮🇷` : `💥 😎 TUNEL - Warp ${index + 1} 🇮🇷`,
             outbounds: [{...outbound, tag: 'warp'}, ...xrayWarpConfig.outbounds]
         });
     });
@@ -3657,7 +3665,7 @@ async function getXrayWarpConfigs (env, client) {
     xrayWoWOutbounds.forEach((outbound, index) => {
         if (outbound.tag.includes('warp-out')) {
             let xrayWoWConfig = structuredClone(xrayWoWConfigTemp);
-            xrayWoWConfig.remarks = client === 'nikang' ? `💥 🇸🇬 TUNEL - WoW Pro ${index/2 + 1} 🌍` : `💥 🇸🇬 TUNEL - WoW ${index/2 + 1} 🌍`;
+            xrayWoWConfig.remarks = client === 'nikang' ? `💥 😎 TUNEL - WoW Pro ${index/2 + 1} 🌍` : `💥 😎 TUNEL - WoW ${index/2 + 1} 🌍`;
             xrayWoWConfig.outbounds = [{...xrayWoWOutbounds[index]}, {...xrayWoWOutbounds[index + 1]}, ...xrayWoWConfig.outbounds];
             xrayWoWConfig.routing.rules[xrayWoWConfig.routing.rules.length - 1].outboundTag = outbound.tag;
             xrayWarpConfigs.push(xrayWoWConfig);
@@ -3665,7 +3673,7 @@ async function getXrayWarpConfigs (env, client) {
     });
 
     let xrayWoWBestPing = structuredClone(xrayWarpBestPing);
-    xrayWoWBestPing.remarks = client === 'nikang' ? '💥 🇸🇬 TUNEL - WoW Pro Best Ping 🚀' : '💥 🇸🇬 TUNEL - WoW Best Ping 🚀';
+    xrayWoWBestPing.remarks = client === 'nikang' ? '💥 😎 TUNEL - WoW Pro Best Ping 🚀' : '💥 😎 TUNEL - WoW Best Ping 🚀';
     xrayWoWBestPing.routing.balancers[0].selector = ['warp-out'];
     xrayWoWBestPing.observatory.subjectSelector = ['warp-out'];
     xrayWarpBestPing.outbounds = [...xrayWarpOutbounds, ...xrayWarpBestPing.outbounds];
@@ -3890,11 +3898,11 @@ async function getClashConfig (env, hostName, isWarp) {
                 "name": "✅ Selector",
                 "type": "select",
                 "proxies": isWarp
-                    ? ['💥 Warp Best Ping 🚀', '💥 WoW Best Ping 🚀', ...warpOutboundsRemarks, ...wowOutboundRemarks ]
-                    : ['💥 Best Ping 💥', ...outboundsRemarks ]
+                    ? ['💥 😎 Warp Best Ping 🚀', '💥 😎 WoW Best Ping 🚀', ...warpOutboundsRemarks, ...wowOutboundRemarks ]
+                    : ['💥 😎 Best Ping 💥', ...outboundsRemarks ]
             },
             {
-                "name": isWarp ? `💥 Warp Best Ping 🚀`: `💥 Best Ping 💥`,
+                "name": isWarp ? `💥 😎 Warp Best Ping 🚀`: `💥 😎 Best Ping 💥`,
                 "type": "url-test",
                 "url": "https://www.gstatic.com/generate_204",
                 "interval": 30,
@@ -3906,7 +3914,7 @@ async function getClashConfig (env, hostName, isWarp) {
     };
 
     isWarp && config["proxy-groups"].push({
-        "name": "💥 WoW Best Ping 🚀",
+        "name": "💥 😎 WoW Best Ping 🚀",
         "type": "url-test",
         "url": "https://www.gstatic.com/generate_204",
         "interval": 30,
@@ -3917,104 +3925,45 @@ async function getClashConfig (env, hostName, isWarp) {
     return config;
 }
 
-function buildSingboxVLESSOutbound (remark, address, port, uuid, host, path) {
-    const tls = defaultHttpsPorts.includes(port) ? true : false;
-    let outbound =  {
-        type: "vless",
-        server: address,
-        server_port: +port,
-        uuid: uuid,
-        domain_strategy: "prefer_ipv6",
-        packet_encoding: "",
-        tls: {
-            alpn: [
-                "http/1.1"
+function buildSingboxDNSRules (blockAds, bypassIran, bypassChina, blockPorn, outboundDomains) {
+    let rules = [
+        {
+            domain: [
+                "www.gstatic.com",
+                ...outboundDomains
             ],
-            enabled: true,
-            insecure: false,
-            server_name: randomUpperCase(host),
-            utls: {
-                enabled: true,
-                fingerprint: "randomized"
-            }
+            server: "dns-direct"
         },
-        transport: {
-            early_data_header_name: "Sec-WebSocket-Protocol",
-            max_early_data: 2560,
-            headers: {
-                Host: host
-            },
-            path: path,
-            type: "ws"
-        },
-        tag: remark
-    };
+        {
+            outbound: "any",
+            server: "dns-direct"
+        }
+    ];
 
-    if (!tls) delete outbound.tls;
-
-    return outbound;
-}
-
-function buildSingboxTrojanOutbound (remark, address, port, password, host, path) {
-    const tls = defaultHttpsPorts.includes(port) ? true : false;
-    let outbound = {
-        password: password,
-        server: address,
-        server_port: +port,
-        tls: {
-            alpn: [
-                "http/1.1"
-            ],
-            enabled: true,
-            insecure: false,
-            server_name: randomUpperCase(host),
-            utls: {
-                enabled: true,
-                fingerprint: "randomized"
-            }
-        },
-        transport: {
-            early_data_header_name: "Sec-WebSocket-Protocol",
-            max_early_data: 2560,
-            headers: {
-                Host: [
-                    host
-                ]
-            },
-            path: path,
-            type: "ws"
-        },
-        type: "trojan",
-        tag: remark
+    let bypassRules = {
+        rule_set: [],
+        server: "dns-direct"
     }
+    
+    bypassIran && bypassRules.rule_set.push("geosite-ir");
+    bypassChina && bypassRules.rule_set.push("geosite-cn");
+    (bypassIran || bypassChina) && rules.push(bypassRules);
 
-    if (!tls) delete outbound.tls;
-
-    return outbound;    
-}
-
-function buildSingboxWarpOutbound (remark, ipv6, privateKey, publicKey, endpoint, reserved, chain) {
-    const ipv6Regex = /\[(.*?)\]/;
-    const portRegex = /[^:]*$/;
-    const endpointServer = endpoint.includes('[') ? endpoint.match(ipv6Regex)[1] : endpoint.split(':')[0];
-    const endpointPort = endpoint.includes('[') ? +endpoint.match(portRegex)[0] : +endpoint.split(':')[1];
-
-    return {
-        local_address: [
-            "172.16.0.2/32",
-            ipv6
+    let blockRules = {
+        disable_cache: true,
+        rule_set: [
+            "geosite-malware",
+            "geosite-phishing",
+            "geosite-cryptominers"
         ],
-        mtu: 1280,
-        peer_public_key: publicKey,
-        private_key: privateKey,
-        reserved: reserved,
-        server: endpointServer,
-        server_port: endpointPort,
-        type: "wireguard",
-        domain_strategy: "prefer_ipv6",
-        detour: chain,
-        tag: remark
+        server: "dns-block"
     };
+
+    blockAds && blockRules.rule_set.push("geosite-category-ads-all");
+    blockPorn && blockRules.rule_set.push("geosite-nsfw");
+    rules.push(blockRules);
+
+    return rules;
 }
 
 function buildSingboxRoutingRules (blockAds, bypassIran, bypassChina, blockPorn, blockUDP443, bypassLAN) {
@@ -4089,11 +4038,27 @@ function buildSingboxRoutingRules (blockAds, bypassIran, bypassChina, blockPorn,
         });
     }
 
-    bypassChina && rules.push({
-        geosite: "cn",
-        geoip: "cn",
-        outbound: "direct"
-    });
+    if (bypassChina) {
+        rules.push({
+            rule_set: ["geosite-cn", "geoip-cn"],
+            outbound: "direct"
+        });
+
+        ruleSet.push({
+            type: "remote",
+            tag: "geosite-cn",
+            format: "binary",
+            url: "https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-cn.srs",
+            download_detour: "direct"
+        },
+        {
+            type: "remote",
+            tag: "geoip-cn",
+            format: "binary",
+            url: "https://raw.githubusercontent.com/SagerNet/sing-geoip/rule-set/geoip-cn.srs",
+            download_detour: "direct"
+        });
+    }
     
     bypassLAN && rules.push({
         ip_is_private: true,
@@ -4152,6 +4117,100 @@ function buildSingboxRoutingRules (blockAds, bypassIran, bypassChina, blockPorn,
     return {rules: rules, rule_set: ruleSet};
 }
 
+function buildSingboxVLESSOutbound (remark, address, port, uuid, host, path) {
+    const tls = defaultHttpsPorts.includes(port) ? true : false;
+    let outbound =  {
+        type: "vless",
+        server: address,
+        server_port: +port,
+        uuid: uuid,
+        domain_strategy: "prefer_ipv6",
+        packet_encoding: "",
+        tls: {
+            alpn: "http/1.1",
+            enabled: true,
+            insecure: false,
+            server_name: randomUpperCase(host),
+            utls: {
+                enabled: true,
+                fingerprint: "randomized"
+            }
+        },
+        transport: {
+            early_data_header_name: "Sec-WebSocket-Protocol",
+            max_early_data: 2560,
+            headers: {
+                Host: host
+            },
+            path: path,
+            type: "ws"
+        },
+        tag: remark
+    };
+
+    if (!tls) delete outbound.tls;
+
+    return outbound;
+}
+
+function buildSingboxTrojanOutbound (remark, address, port, password, host, path) {
+    const tls = defaultHttpsPorts.includes(port) ? true : false;
+    let outbound = {
+        password: password,
+        server: address,
+        server_port: +port,
+        tls: {
+            alpn: "http/1.1",
+            enabled: true,
+            insecure: false,
+            server_name: randomUpperCase(host),
+            utls: {
+                enabled: true,
+                fingerprint: "randomized"
+            }
+        },
+        transport: {
+            early_data_header_name: "Sec-WebSocket-Protocol",
+            max_early_data: 2560,
+            headers: {
+                Host: host
+            },
+            path: path,
+            type: "ws"
+        },
+        type: "trojan",
+        tag: remark
+    }
+
+    if (!tls) delete outbound.tls;
+
+    return outbound;    
+}
+
+function buildSingboxWarpOutbound (remark, ipv6, privateKey, publicKey, endpoint, reserved, chain) {
+    const ipv6Regex = /\[(.*?)\]/;
+    const portRegex = /[^:]*$/;
+    const endpointServer = endpoint.includes('[') ? endpoint.match(ipv6Regex)[1] : endpoint.split(':')[0];
+    const endpointPort = endpoint.includes('[') ? +endpoint.match(portRegex)[0] : +endpoint.split(':')[1];
+
+    return {
+        local_address: [
+            "172.16.0.2/32",
+            ipv6
+        ],
+        mtu: 1280,
+        peer_public_key: publicKey,
+        private_key: privateKey,
+        reserved: reserved,
+        server: endpointServer,
+        server_port: endpointPort,
+        type: "wireguard",
+        domain_strategy: "prefer_ipv6",
+        detour: chain,
+        tag: remark
+    };
+}
+
 async function getSingboxConfig (env, hostName, client, warpType) {
     let warpConfigs = [];
     let proxySettings = {};
@@ -4188,15 +4247,15 @@ async function getSingboxConfig (env, hostName, client, warpType) {
         const WOWOutbounds = await buildWoWOutbounds(env, client, proxySettings, warpConfigs);
         config.dns.servers[0].address = '1.1.1.1';
         config.outbounds[0].outbounds = client === 'hiddify'
-            ? ["💥 Warp Pro Best Ping 🚀", "💥 WoW Pro Best Ping 🚀"]
-            : ["💥 Warp Best Ping 🚀", "💥 WoW Best Ping 🚀"];
+            ? ["💥 😎 Warp Pro Best Ping 🚀", "💥 😎 WoW Pro Best Ping 🚀"]
+            : ["💥 😎 Warp Best Ping 🚀", "💥 😎 WoW Best Ping 🚀"];
         config.outbounds.splice(2, 0, structuredClone(config.outbounds[1]));
         config.outbounds[1].tag = client === 'hiddify' 
-            ? "💥 Warp Pro Best Ping 🚀"
-            : "💥 Warp Best Ping 🚀";
+            ? "💥 😎 Warp Pro Best Ping 🚀"
+            : "💥 😎 Warp Best Ping 🚀";
         config.outbounds[2].tag = client === 'hiddify'
-            ? "💥 WoW Pro Best Ping 🚀"
-            : "💥 WoW Best Ping 🚀";
+            ? "💥 😎 WoW Pro Best Ping 🚀"
+            : "💥 😎 WoW Best Ping 🚀";
         config.outbounds.push(...warpOutbounds, ...WOWOutbounds);
         warpOutbounds.forEach(outbound => {
             config.outbounds[0].outbounds.push(outbound.tag);
@@ -4241,12 +4300,10 @@ async function getSingboxConfig (env, hostName, client, warpType) {
         });
     }
 
-    config.dns.rules[0].domain = [...config.dns.rules[0].domain, ...new Set(outboundDomains)];
+    config.dns.rules = buildSingboxDNSRules(blockAds, bypassIran, bypassChina, blockPorn, new Set(outboundDomains));
     const {rules, rule_set} = buildSingboxRoutingRules (blockAds, bypassIran, bypassChina, blockPorn, blockUDP443, bypassLAN);
     config.route.rules = rules;
     config.route.rule_set = rule_set;
-    blockAds && config.dns.rules[2].rule_set.push("geosite-category-ads-all");
-    blockPorn && config.dns.rules[2].rule_set.push("geosite-nsfw");
 
     return config;
 }
@@ -4399,36 +4456,14 @@ const singboxConfigTemp = {
                 tag: "dns-block"
             }
         ],
-        rules: [
-            {
-                domain: [
-                    "www.gstatic.com"
-                ],
-                server: "dns-direct"
-            },
-            {
-                outbound: [
-                  "any"
-                ],
-                server: "dns-direct"
-            },
-            {
-                disable_cache: true,
-                rule_set: [
-                    "geosite-malware",
-                    "geosite-phishing",
-                    "geosite-cryptominers"
-                ],
-                server: "dns-block"
-            }
-        ],
+        rules: [],
         independent_cache: true
     },
     inbounds: [
         {
             type: "direct",
             tag: "dns-in",
-            listen: "127.0.0.1",
+            listen: "0.0.0.0",
             listen_port: 6450,
             override_address: "8.8.8.8",
             override_port: 53
@@ -4449,7 +4484,7 @@ const singboxConfigTemp = {
         {
             type: "mixed",
             tag: "mixed-in",
-            listen: "127.0.0.1",
+            listen: "0.0.0.0",
             listen_port: 2080,
             sniff: true,
             sniff_override_destination: true
@@ -4459,11 +4494,11 @@ const singboxConfigTemp = {
         {
             type: "selector",
             tag: "proxy",
-            outbounds: ["💥 Best Ping 💥"]
+            outbounds: ["💥 😎 Best Ping 💥"]
         },
         {
             type: "urltest",
-            tag: "💥 Best Ping 💥",
+            tag: "💥 😎 Best Ping 💥",
             outbounds: [],
             url: "https://www.gstatic.com/generate_204",
             interval: "30s",
